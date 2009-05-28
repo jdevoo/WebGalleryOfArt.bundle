@@ -37,5 +37,5 @@ def GetImages(sender, key, choice):
   reader = csv.DictReader(open(Resource.InternalPath(PLUGIN_DATA), "rb"))
   for row in reader:
     if choice == "ALL" or row[key] == choice:
-      dir.Append(PhotoItem(row["URL"].replace("/html/", "/art/").replace(".html", ".jpg"), row["TITLE"], row["ARTIST"], row["TECHNIQUE"]+" | "+row["DATE"]+" | "+row["LOCATION"]))
+      dir.Append(PhotoItem(row["URL"].replace("/html/", "/art/").replace(".html", ".jpg"), row["TITLE"].decode("latin-1"), row["ARTIST"].decode("latin-1"), (row["TITLE"]+"\n"+row["ARTIST"]+"\n"+row["DATE"]+" | "+row["TECHNIQUE"]+" | "+row["LOCATION"]).decode("latin-1")))
   return dir
