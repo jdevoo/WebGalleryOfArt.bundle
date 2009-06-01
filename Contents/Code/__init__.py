@@ -28,6 +28,7 @@ def SectionMenu(sender, choice):
   res = []
   for row in reader:
     if row[choice] not in res: res.append(row[choice])
+  res.sort()
   for value in res:
     dir.Append(Function(DirectoryItem(GetImages, title=value), key=choice, choice=value))
   return dir
