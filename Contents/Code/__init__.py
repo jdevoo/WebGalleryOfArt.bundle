@@ -1,10 +1,10 @@
-import csv, string
 from PMS import *
 from PMS.Objects import *
 from PMS.Shortcuts import *
+import csv, string
 
-PLUGIN_PREFIX   = "/photos/WebGalleryOfArt"
-PLUGIN_DATA     = "catalog.csv"
+PLUGIN_PREFIX = "/photos/webgalleryofart_r2"
+PLUGIN_DATA   = "catalog.csv"
 
 def Start():
   Plugin.AddPrefixHandler(PLUGIN_PREFIX, TopMenu, "Web Gallery Of Art", "icon-default.png", "art-default.jpg")
@@ -30,7 +30,7 @@ def AlphaMenu(sender):
   return dir
 
 def SectionMenu(sender, choice):
-  dir = MediaContainer()
+  dir = MediaContainer(title2=sender.itemTitle)
   reader = csv.DictReader(open("%s/%s" % (Resource.__resourcePath, PLUGIN_DATA), "rb"))
   res = []
   if len(choice) > 1:
@@ -46,7 +46,7 @@ def SectionMenu(sender, choice):
   return dir
 
 def SearchMenu(sender, query):
-  dir = MediaContainer()
+  dir = MediaContainer(title2=query)
   reader = csv.DictReader(open("%s/%s" % (Resource.__resourcePath, PLUGIN_DATA), "rb"))
   res = []
   for row in reader:

@@ -5,7 +5,7 @@
     <key>CFBundleExecutable</key>
     <string>Hello</string>
     <key>CFBundleIdentifier</key>
-    <string>com.plexapp.plugins.webgalleryofart</string>
+    <string>com.plexapp.plugins.webgalleryofart_r2</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>
