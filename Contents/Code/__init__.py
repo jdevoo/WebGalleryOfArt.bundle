@@ -7,11 +7,11 @@ PLUGIN_PREFIX = "/photos/webgalleryofart_r2"
 PLUGIN_DATA   = "catalog.csv"
 
 def Start():
-  Plugin.AddPrefixHandler(PLUGIN_PREFIX, TopMenu, "Web Gallery Of Art", "icon-default.png", "art-default.jpg")
+  Plugin.AddPrefixHandler(PLUGIN_PREFIX, TopMenu, "Web Gallery Of Art", "icon-wga.png", "art-wga.png")
   Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
   MediaContainer.title1 = "Web Gallery Of Art"
   MediaContainer.content = "Items"
-  MediaContainer.art = R("art-default.jpg")
+  MediaContainer.art = R("art-wga.png")
 
 def TopMenu():
   dir = MediaContainer()
