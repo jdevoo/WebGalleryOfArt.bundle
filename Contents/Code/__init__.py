@@ -1,65 +1,87 @@
-from PMS import *
-from PMS.Objects import *
-from PMS.Shortcuts import *
-import csv, string
+import csv, string, StringIO
 
-PLUGIN_PREFIX = "/photos/webgalleryofart_r2"
-PLUGIN_DATA   = "catalog.csv"
+PLUGIN_PREFIX = '/photos/wga'
+PLUGIN_DATA = 'catalog.csv'
+PLUGIN_NAME = 'Web Gallery Of Art'
+ART = 'art-default.jpg'
+ICON = 'icon-default.png'
+LOOKUP = {
+  'AUTHOR': 0, 'BORN-DIED': 1, 'TITLE': 2, 'DATE': 3, 'TECHNIQUE': 4,
+  'LOCATION': 5, 'URL': 6, 'FORM': 7, 'TYPE': 8, 'SCHOOL': 9, 'TIMELINE': 10
+}
 
 def Start():
-  Plugin.AddPrefixHandler(PLUGIN_PREFIX, TopMenu, "Web Gallery Of Art", "icon-default.png", "art-default.png")
-  Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
-  MediaContainer.title1 = "Web Gallery Of Art"
-  MediaContainer.content = "Items"
-  MediaContainer.art = R("art-default.png")
+  Plugin.AddViewGroup('InfoList', viewMode='InfoList', mediaType='items')
+  ObjectContainer.title1 = PLUGIN_NAME
+  ObjectContainer.view_group = 'InfoList'
+  ObjectContainer.art = R(ART)
+  DirectoryObject.art = R(ART)
+  DirectoryObject.thumb = R(ICON)
 
+@handler(PLUGIN_PREFIX, PLUGIN_NAME)
 def TopMenu():
-  dir = MediaContainer()
-  dir.Append(Function(DirectoryItem(AlphaMenu, title="By Artist")))
-  dir.Append(Function(DirectoryItem(SectionMenu, title="By Form"), choice="FORM"))
-  dir.Append(Function(DirectoryItem(SectionMenu, title="By Type"), choice="TYPE"))
-  dir.Append(Function(DirectoryItem(SectionMenu, title="By School"), choice="SCHOOL"))
-  dir.Append(Function(DirectoryItem(SectionMenu, title="By Timeline"), choice="TIMELINE"))
-  dir.Append(Function(SearchDirectoryItem(SearchMenu, title="Search...", prompt="Search Artist and Title")))
-  return dir
+  oc = ObjectContainer(view_group='InfoList')
+  oc.add(DirectoryObject(key=Callback(AlphaMenu), title=Locale.LocalString('AUTHOR')))
+  oc.add(DirectoryObject(key=Callback(SectionMenu, choice='FORM'), title=Locale.LocalString('FORM')))
+  oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TYPE'), title=Locale.LocalString('TYPE')))
+  oc.add(DirectoryObject(key=Callback(SectionMenu, choice='SCHOOL'), title=Locale.LocalString('SCHOOL')))
+  oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TIMELINE'), title=Locale.LocalString('TIMELINE')))
+  oc.add(InputDirectoryObject(key=Callback(SearchMenu), title=Locale.LocalString('search'), prompt=Locale.LocalString('search_desc'), thumb=R(ICON)))
+  return oc
 
-def AlphaMenu(sender):
-  dir = MediaContainer()
-  for letter in map(chr, range(65, 91)):
-    dir.Append(Function(DirectoryItem(SectionMenu, title=letter), choice=letter))
-  return dir
+def AlphaMenu():
+  oc = ObjectContainer(view_group='InfoList', title2=Locale.LocalString('first_letter'))
+  for letter in list(string.ascii_uppercase):
+    oc.add(DirectoryObject(key=Callback(SectionMenu, choice=letter), title=letter))
+  return oc
 
-def SectionMenu(sender, choice):
-  dir = MediaContainer(title2=sender.itemTitle)
-  reader = csv.DictReader(open("%s/%s" % (Resource.__resourcePath, PLUGIN_DATA), "rb"))
+def SectionMenu(choice):
+  if len(choice) > 1:
+    title = Locale.LocalString(choice)
+  else:
+    title = Locale.LocalString('first_letter')+' '+choice
+  oc = ObjectContainer(view_group='InfoList', title2=title)
+  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=False))
+  data = csv.reader(handle)
+  data.next()
   res = []
   if len(choice) > 1:
-    for row in reader:
-      if row[choice] not in res: res.append(row[choice])
+    for row in data:
+      if row[LOOKUP[choice]] not in res: res.append(row[LOOKUP[choice]])
   else:
-    for row in reader:
-      if row["ARTIST"][0] == choice and row["ARTIST"] not in res: res.append(row["ARTIST"])
-    choice = "ARTIST"
+    for row in data:
+      if row[LOOKUP['AUTHOR']][0] == choice and row[LOOKUP['AUTHOR']] not in res: res.append(row[LOOKUP['AUTHOR']])
+    choice = 'AUTHOR'
   res.sort()
   for value in res:
-    dir.Append(Function(DirectoryItem(GetImages, title=string.capwords(value).decode("latin-1")), key=choice, choice=value))
-  return dir
+    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value).decode('latin-1')))
+  return oc
 
-def SearchMenu(sender, query):
-  dir = MediaContainer(title2=query)
-  reader = csv.DictReader(open("%s/%s" % (Resource.__resourcePath, PLUGIN_DATA), "rb"))
+def SearchMenu(query):
+  oc = ObjectContainer(view_group='InfoList', title2=query)
+  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=False))
+  data = csv.reader(handle)
+  data.next()
   res = []
-  for row in reader:
-    if (row["ARTIST"].lower().find(query.lower()) != -1 or row["TITLE"].lower().find(query.lower()) != -1) and row["ARTIST"] not in res: res.append(row["ARTIST"])
+  for row in data:
+    if (row[LOOKUP['AUTHOR']].lower().find(query.lower()) != -1 or row[LOOKUP['TITLE']].lower().find(query.lower()) != -1) and row[LOOKUP['AUTHOR']] not in res:
+      res.append(row[LOOKUP['AUTHOR']])
   res.sort()
   for value in res:
-    dir.Append(Function(DirectoryItem(GetImages, title=string.capwords(value).decode("latin-1")), key="ARTIST", choice=value))
-  return dir
+    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=string.capwords(value).decode('latin-1')))
+  return oc
 
-def GetImages(sender, key, choice):
-  dir = MediaContainer(title2=sender.itemTitle)
-  reader = csv.DictReader(open("%s/%s" % (Resource.__resourcePath, PLUGIN_DATA), "rb"))
-  for row in reader:
-    if row[key] == choice:
-      dir.Append(PhotoItem(row["URL"].replace("/html/", "/art/").replace(".html", ".jpg"), row["TITLE"].decode("latin-1"), row["ARTIST"].decode("latin-1"), (row["TITLE"]+"\n"+row["ARTIST"]+"\n"+row["DATE"]+" | "+row["TECHNIQUE"]+" | "+row["LOCATION"]).decode("latin-1")))
-  return dir
+def GetImages(key, choice):
+  oc = ObjectContainer(view_group='InfoList')
+  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=False))
+  data = csv.reader(handle)
+  data.next()
+  for row in data:
+    if row[LOOKUP[key]] == choice:
+      oc.add(PhotoObject(
+        key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
+        rating_key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
+        title=row[LOOKUP['TITLE']].decode('latin-1'),
+        summary=(row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+' | '+row[LOOKUP['TECHNIQUE']]+' | '+row[LOOKUP['LOCATION']]).decode('latin-1')
+      ))
+  return oc
