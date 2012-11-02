@@ -41,47 +41,49 @@ def SectionMenu(choice):
   else:
     title = Locale.LocalString('first_letter')+' '+choice
   oc = ObjectContainer(view_group='InfoList', title2=title)
-  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=False))
+  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=True))
   data = csv.reader(handle)
   data.next()
   res = []
   if len(choice) > 1:
     for row in data:
-      if row[LOOKUP[choice]] not in res: res.append(row[LOOKUP[choice]])
+      if row[LOOKUP[choice]].encode('latin-1') not in res: res.append(row[LOOKUP[choice]].encode('latin-1'))
   else:
     for row in data:
-      if row[LOOKUP['AUTHOR']][0] == choice and row[LOOKUP['AUTHOR']] not in res: res.append(row[LOOKUP['AUTHOR']])
+      if row[LOOKUP['AUTHOR']][0] == choice and row[LOOKUP['AUTHOR']].encode('latin-1') not in res:
+        res.append(row[LOOKUP['AUTHOR']].encode('latin-1'))
     choice = 'AUTHOR'
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value).decode('latin-1')))
+    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value.decode('latin-1'))))
   return oc
 
 def SearchMenu(query):
   oc = ObjectContainer(view_group='InfoList', title2=query)
-  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=False))
+  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=True))
   data = csv.reader(handle)
   data.next()
   res = []
   for row in data:
-    if (row[LOOKUP['AUTHOR']].lower().find(query.lower()) != -1 or row[LOOKUP['TITLE']].lower().find(query.lower()) != -1) and row[LOOKUP['AUTHOR']] not in res:
-      res.append(row[LOOKUP['AUTHOR']])
+    if (row[LOOKUP['AUTHOR']].lower().find(query.lower()) != -1 or row[LOOKUP['TITLE']].lower().find(query.lower()) != -1) and \
+      row[LOOKUP['AUTHOR']] not in res:
+      res.append(row[LOOKUP['AUTHOR']].encode('latin-1'))
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=string.capwords(value).decode('latin-1')))
+    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=string.capwords(value.decode('latin-1'))))
   return oc
 
 def GetImages(key, choice):
-  oc = ObjectContainer(view_group='InfoList')
-  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=False))
+  oc = ObjectContainer(view_group='InfoList', title2=choice.decode('latin-1'))
+  handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=True))
   data = csv.reader(handle)
   data.next()
   for row in data:
-    if row[LOOKUP[key]] == choice:
+    if row[LOOKUP[key]].encode('latin-1') == choice:
       oc.add(PhotoObject(
         key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
         rating_key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
-        title=row[LOOKUP['TITLE']].decode('latin-1'),
-        summary=(row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+' | '+row[LOOKUP['TECHNIQUE']]+' | '+row[LOOKUP['LOCATION']]).decode('latin-1')
+        title=row[LOOKUP['TITLE']],
+        summary=row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+' | '+row[LOOKUP['TECHNIQUE']]+' | '+row[LOOKUP['LOCATION']]
       ))
   return oc
