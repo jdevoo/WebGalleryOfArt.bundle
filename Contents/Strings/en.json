@@ -1,10 +1,10 @@
 {
-  'AUTHOR': 'By Artist',
-  'FORM': 'By Form',
-  'TYPE': 'By Type',
-  'SCHOOL': 'By School',
-  'TIMELINE': 'By Timeline',
-  'search': 'Search...',
-  'search_desc': 'Search Artist and Title',
-  'first_letter': 'Name Begins With'
+  "AUTHOR": "By Artist",
+  "FORM": "By Form",
+  "TYPE": "By Type",
+  "SCHOOL": "By School",
+  "TIMELINE": "By Timeline",
+  "search": "Search...",
+  "search_desc": "Search Artist and Title",
+  "first_letter": "Name Begins With"
 }
