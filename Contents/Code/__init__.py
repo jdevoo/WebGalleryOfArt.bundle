@@ -18,7 +18,7 @@ def Start():
   DirectoryObject.art = R(ART)
   DirectoryObject.thumb = R(ICON)
 
-@handler(PLUGIN_PREFIX, PLUGIN_NAME)
+@handler(PLUGIN_PREFIX, PLUGIN_NAME, thumb=ICON, art=ART)
 def TopMenu():
   oc = ObjectContainer(view_group='InfoList')
   oc.add(DirectoryObject(key=Callback(AlphaMenu), title=Locale.LocalString('AUTHOR')))
