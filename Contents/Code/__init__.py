@@ -1,4 +1,4 @@
-import csv, string, StringIO
+import csv, string, StringIO, unicodedata
 
 PLUGIN_PREFIX = '/photos/wga'
 PLUGIN_DATA = 'catalog.csv'
@@ -19,7 +19,7 @@ def TopMenu():
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TYPE'), title=Locale.LocalString('TYPE'), summary=Locale.LocalString('database')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='SCHOOL'), title=Locale.LocalString('SCHOOL'), summary=Locale.LocalString('database')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TIMELINE'), title=Locale.LocalString('TIMELINE'), summary=Locale.LocalString('database')))
-  oc.add(InputDirectoryObject(key=Callback(SearchMenu), title=Locale.LocalString('search'), prompt=Locale.LocalString('search_desc')))
+  oc.add(InputDirectoryObject(key=Callback(SearchMenu), title=Locale.LocalString('search'), prompt=Locale.LocalString('search_desc'), summary=Locale.LocalString('database')))
   return oc
 
 def AlphaMenu():
@@ -41,8 +41,8 @@ def SectionMenu(choice):
   deco = {}
   if len(choice) > 1:
     for row in data:
-      if row[LOOKUP[choice]].encode('latin-1') not in res:
-        key = row[LOOKUP[choice]].encode('latin-1')
+      if row[LOOKUP[choice]] not in res:
+        key = row[LOOKUP[choice]]
         res.append(key)
         deco[key] = [
           row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
@@ -50,8 +50,8 @@ def SectionMenu(choice):
         ]
   else:
     for row in data:
-      if row[LOOKUP['AUTHOR']][0] == choice and row[LOOKUP['AUTHOR']].encode('latin-1') not in res:
-        key = row[LOOKUP['AUTHOR']].encode('latin-1')
+      if row[LOOKUP['AUTHOR']][0] == choice and row[LOOKUP['AUTHOR']] not in res:
+        key = row[LOOKUP['AUTHOR']]
         res.append(key)
         deco[key] = [
           row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
@@ -60,7 +60,7 @@ def SectionMenu(choice):
     choice = 'AUTHOR'
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value.decode('latin-1')), art=deco[value][0], thumb=deco[value][1], summary=Locale.LocalString('database')))
+    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=value.decode('utf-8').title(), art=deco[value][0], thumb=deco[value][1], summary=Locale.LocalString('database')))
   return oc
 
 def SearchMenu(query):
@@ -70,21 +70,26 @@ def SearchMenu(query):
   data.next()
   res = []
   for row in data:
-    if (row[LOOKUP['AUTHOR']].lower().find(query.lower()) != -1 or row[LOOKUP['TITLE']].lower().find(query.lower()) != -1) and \
-      row[LOOKUP['AUTHOR']] not in res:
-      res.append(row[LOOKUP['AUTHOR']].encode('latin-1'))
+    plain_author = lower_no_accents(row[LOOKUP['AUTHOR']])
+    plain_title = lower_no_accents(row[LOOKUP['TITLE']])
+    if (plain_author.find(query.lower()) != -1 or plain_title.find(query.lower()) != -1) and row[LOOKUP['AUTHOR']] not in res:
+      res.append(row[LOOKUP['AUTHOR']])
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=string.capwords(value.decode('latin-1')), summary=Locale.LocalString('database')))
+    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=value.decode('utf-8').title(), summary=Locale.LocalString('database')))
   return oc
 
+def lower_no_accents(input_str):
+  nfkd_form = unicodedata.normalize('NFKD', input_str.decode('utf-8'))
+  return ''.join(c for c in nfkd_form if not unicodedata.combining(c)).lower()
+
 def GetImages(key, choice):
-  oc = ObjectContainer(view_group='InfoList', title2=choice.decode('latin-1'))
+  oc = ObjectContainer(view_group='InfoList', title2=choice)
   handle = StringIO.StringIO(Resource.Load(PLUGIN_DATA, binary=True))
   data = csv.reader(handle)
   data.next()
   for row in data:
-    if row[LOOKUP[key]].encode('latin-1') == choice:
+    if row[LOOKUP[key]] == choice:
       oc.add(PhotoObject(
         key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
         rating_key=key,
