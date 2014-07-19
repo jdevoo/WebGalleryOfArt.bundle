@@ -14,7 +14,7 @@ def Start():
 @handler(PLUGIN_PREFIX, PLUGIN_NAME)
 def TopMenu():
   oc = ObjectContainer(view_group='InfoList')
-  oc.add(DirectoryObject(key=Callback(AlphaMenu), title=Locale.LocalString('AUTHOR')))
+  oc.add(DirectoryObject(key=Callback(AlphaMenu), title=Locale.LocalString('AUTHOR'), summary=Locale.LocalString('database')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='FORM'), title=Locale.LocalString('FORM'), summary=Locale.LocalString('database')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TYPE'), title=Locale.LocalString('TYPE'), summary=Locale.LocalString('database')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='SCHOOL'), title=Locale.LocalString('SCHOOL'), summary=Locale.LocalString('database')))
@@ -25,7 +25,7 @@ def TopMenu():
 def AlphaMenu():
   oc = ObjectContainer(view_group='InfoList', title2=Locale.LocalString('first_letter'))
   for letter in list(string.ascii_uppercase):
-    oc.add(DirectoryObject(key=Callback(SectionMenu, choice=letter), title=letter))
+    oc.add(DirectoryObject(key=Callback(SectionMenu, choice=letter), title=letter, summary=Locale.LocalString('database')))
   return oc
 
 def SectionMenu(choice):
@@ -60,7 +60,7 @@ def SectionMenu(choice):
     choice = 'AUTHOR'
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value.decode('latin-1')), art=deco[value][0], thumb=deco[value][1]))
+    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value.decode('latin-1')), art=deco[value][0], thumb=deco[value][1], summary=Locale.LocalString('database')))
   return oc
 
 def SearchMenu(query):
@@ -75,7 +75,7 @@ def SearchMenu(query):
       res.append(row[LOOKUP['AUTHOR']].encode('latin-1'))
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=string.capwords(value.decode('latin-1'))))
+    oc.add(DirectoryObject(key=Callback(GetImages, key='AUTHOR', choice=value), title=string.capwords(value.decode('latin-1')), summary=Locale.LocalString('database')))
   return oc
 
 def GetImages(key, choice):
