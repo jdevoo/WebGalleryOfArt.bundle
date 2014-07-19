@@ -3,8 +3,6 @@ import csv, string, StringIO
 PLUGIN_PREFIX = '/photos/wga'
 PLUGIN_DATA = 'catalog.csv'
 PLUGIN_NAME = 'Web Gallery Of Art'
-ART = 'art-default.jpg'
-ICON = 'icon-default.png'
 LOOKUP = {
   'AUTHOR': 0, 'BORN-DIED': 1, 'TITLE': 2, 'DATE': 3, 'TECHNIQUE': 4,
   'LOCATION': 5, 'URL': 6, 'FORM': 7, 'TYPE': 8, 'SCHOOL': 9, 'TIMELINE': 10
@@ -12,13 +10,8 @@ LOOKUP = {
 
 def Start():
   Plugin.AddViewGroup('InfoList', viewMode='InfoList', mediaType='items')
-  ObjectContainer.title1 = PLUGIN_NAME
-  ObjectContainer.view_group = 'InfoList'
-  ObjectContainer.art = R(ART)
-  DirectoryObject.art = R(ART)
-  DirectoryObject.thumb = R(ICON)
 
-@handler(PLUGIN_PREFIX, PLUGIN_NAME, thumb=ICON, art=ART)
+@handler(PLUGIN_PREFIX, PLUGIN_NAME)
 def TopMenu():
   oc = ObjectContainer(view_group='InfoList')
   oc.add(DirectoryObject(key=Callback(AlphaMenu), title=Locale.LocalString('AUTHOR')))
@@ -26,7 +19,7 @@ def TopMenu():
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TYPE'), title=Locale.LocalString('TYPE')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='SCHOOL'), title=Locale.LocalString('SCHOOL')))
   oc.add(DirectoryObject(key=Callback(SectionMenu, choice='TIMELINE'), title=Locale.LocalString('TIMELINE')))
-  oc.add(InputDirectoryObject(key=Callback(SearchMenu), title=Locale.LocalString('search'), prompt=Locale.LocalString('search_desc'), thumb=R(ICON)))
+  oc.add(InputDirectoryObject(key=Callback(SearchMenu), title=Locale.LocalString('search'), prompt=Locale.LocalString('search_desc')))
   return oc
 
 def AlphaMenu():
@@ -45,17 +38,29 @@ def SectionMenu(choice):
   data = csv.reader(handle)
   data.next()
   res = []
+  deco = {}
   if len(choice) > 1:
     for row in data:
-      if row[LOOKUP[choice]].encode('latin-1') not in res: res.append(row[LOOKUP[choice]].encode('latin-1'))
+      if row[LOOKUP[choice]].encode('latin-1') not in res:
+        key = row[LOOKUP[choice]].encode('latin-1')
+        res.append(key)
+        deco[key] = [
+          row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
+          row[LOOKUP['URL']].replace('/html/', '/preview/').replace('.html', '.jpg')
+        ]
   else:
     for row in data:
       if row[LOOKUP['AUTHOR']][0] == choice and row[LOOKUP['AUTHOR']].encode('latin-1') not in res:
-        res.append(row[LOOKUP['AUTHOR']].encode('latin-1'))
+        key = row[LOOKUP['AUTHOR']].encode('latin-1')
+        res.append(key)
+        deco[key] = [
+          row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
+          row[LOOKUP['URL']].replace('/html/', '/preview/').replace('.html', '.jpg')
+        ]
     choice = 'AUTHOR'
   res.sort()
   for value in res:
-    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value.decode('latin-1'))))
+    oc.add(DirectoryObject(key=Callback(GetImages, key=choice, choice=value), title=string.capwords(value.decode('latin-1')), art=deco[value][0], thumb=deco[value][1]))
   return oc
 
 def SearchMenu(query):
@@ -82,8 +87,10 @@ def GetImages(key, choice):
     if row[LOOKUP[key]].encode('latin-1') == choice:
       oc.add(PhotoObject(
         key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
-        rating_key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
+        rating_key=key,
         title=row[LOOKUP['TITLE']],
-        summary=row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+' | '+row[LOOKUP['TECHNIQUE']]+' | '+row[LOOKUP['LOCATION']]
+        summary=row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+' | '+row[LOOKUP['TECHNIQUE']]+' | '+row[LOOKUP['LOCATION']],
+        thumb=row[LOOKUP['URL']].replace('/html/', '/preview/').replace('.html', '.jpg'),
       ))
   return oc
+
