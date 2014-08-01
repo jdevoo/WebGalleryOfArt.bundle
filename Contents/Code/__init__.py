@@ -81,7 +81,7 @@ def SearchMenu(query):
 
 def lower_no_accents(input_str):
   nfkd_form = unicodedata.normalize('NFKD', input_str.decode('utf-8'))
-  return ''.join(c for c in nfkd_form if not unicodedata.combining(c)).lower()
+  return nfkd_form.lower()
 
 def GetImages(key, choice):
   oc = ObjectContainer(view_group='InfoList', title2=choice)
@@ -94,7 +94,7 @@ def GetImages(key, choice):
         key=row[LOOKUP['URL']].replace('/html/', '/art/').replace('.html', '.jpg'),
         rating_key=key,
         title=row[LOOKUP['TITLE']],
-        summary=row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+' | '+row[LOOKUP['TECHNIQUE']]+' | '+row[LOOKUP['LOCATION']],
+        summary=row[LOOKUP['TITLE']]+'\n'+row[LOOKUP['AUTHOR']]+'\n'+row[LOOKUP['DATE']]+'\n'+row[LOOKUP['TECHNIQUE']]+'\n'+row[LOOKUP['LOCATION']],
         thumb=row[LOOKUP['URL']].replace('/html/', '/preview/').replace('.html', '.jpg'),
       ))
   return oc
